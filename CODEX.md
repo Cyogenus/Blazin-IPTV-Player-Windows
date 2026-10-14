@@ -30,3 +30,13 @@ Do not claim EPG, posters, logos, or categories are guaranteed for every playlis
 
 Say these features depend on the user’s IPTV source.
 
+
+## Website maintenance
+
+- Keep the homepage brand-focused; use `/windows-iptv-player/` for broad Windows player intent and the existing source guides for their specific tasks.
+- Add new indexable pages to `docs/sitemap.xml` deliberately. Sitemap omission must never trigger content deletion.
+- Legacy migrations are listed explicitly in `scripts/fix-bing-quality-issues.mjs`; review the destination against the old page intent.
+- Update sitemap `lastmod` only after a significant page change. Maintenance runs preserve these dates.
+- Comparisons must identify BLAZIN as the publisher, cite official sources and distinguish documentation review from hands-on tests.
+- Do not invent prices, ratings or review markup to obtain rich results.
+- Run the existing SEO, metadata, copy and favicon checks before publishing.

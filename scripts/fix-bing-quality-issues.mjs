@@ -4,7 +4,6 @@ import { dirname, join, relative, resolve } from "node:path";
 const docs = resolve(new URL("../docs/", import.meta.url).pathname.replace(/^\/(.:)/, "$1"));
 const site = "https://windowsiptv.com";
 const store = "https://apps.microsoft.com/detail/9NQ5S0FFCN8T?cid=Blazin_website";
-const today = new Date().toISOString().slice(0, 10);
 
 function walk(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -83,21 +82,59 @@ function setCanonical(html, canonical) {
   return cleaned.replace(/<\/head>/i, `${tag}</head>`);
 }
 
+// Reviewed legacy URL migrations. Sitemap omission must never delete page content.
+const redirects = {
+  "best-iptv-player-for-pc.html": "/best-iptv-player-for-windows/",
+  "best-iptv-player-windows-11.html": "/best-iptv-player-for-windows/",
+  "free-iptv-player-windows.html": "/download.html",
+  "how-to-add-m3u-playlist-windows.html": "/m3u-player-windows/",
+  "how-to-choose-iptv-player-windows.html": "/windows-iptv-player/",
+  "how-to-load-epg-guide.html": "/epg-iptv-player-windows/",
+  "how-to-use-stalker-portal.html": "/stalker-portal-player-windows/",
+  "iplayer-vs-iptv-player.html": "/windows-iptv-player/",
+  "iptv-app-for-pc.html": "/windows-iptv-player/",
+  "iptv-download-windows.html": "/download.html",
+  "iptv-para-pc.html": "/windows-iptv-player/",
+  "iptv-player-for-laptop.html": "/windows-iptv-player/",
+  "iptv-player-for-large-playlists.html": "/features.html",
+  "iptv-player-for-pc-without-emulator/index.html": "/windows-iptv-player/",
+  "iptv-player-for-small-screen-laptop.html": "/windows-iptv-player/",
+  "iptv-player-for-windows-10.html": "/windows-iptv-player/",
+  "iptv-player-with-epg.html": "/epg-iptv-player-windows/",
+  "iptv-player-with-external-player.html": "/features.html",
+  "iptv-player-with-themes-windows.html": "/features.html",
+  "iptv-player-zero-alternative-windows.html": "/windows-iptv-player/",
+  "iptv-smarters-alternative-windows/index.html": "/windows-iptv-player/",
+  "iptv-smarters-alternative-windows.html": "/windows-iptv-player/",
+  "iptv-stream-player-windows.html": "/windows-iptv-player/",
+  "iptvnator-alternative/index.html": "/windows-iptv-player/",
+  "kodi-iptv-setup-vs-blazin.html": "/windows-iptv-player/",
+  "legal-iptv-player-windows.html": "/legal-disclaimer.html",
+  "lightweight-iptv-player-windows.html": "/windows-iptv-player/",
+  "m3u-m3u8-player-windows.html": "/m3u-player-windows/",
+  "m3u-player-windows.html": "/m3u-player-windows/",
+  "m3u-plus-player-windows.html": "/m3u-player-windows/",
+  "microsoft-store-iptv-player-windows.html": "/download.html",
+  "smart-iptv-player-pc.html": "/windows-iptv-player/",
+  "ssiptv-alternative-windows.html": "/windows-iptv-player/",
+  "stalker-portal-player-windows.html": "/stalker-portal-player-windows/",
+  "stb-mac-player-windows.html": "/stb-mac-player-windows/",
+  "stb-mac-vs-stalker-portal.html": "/stalker-portal-player-windows/",
+  "tivimate-alternative-windows.html": "/windows-iptv-player/",
+  "vlc-alternative-iptv-player/index.html": "/windows-iptv-player/",
+  "vlc-iptv-player-windows.html": "/windows-iptv-player/",
+  "windows-iptv-app.html": "/windows-iptv-player/",
+  "windows-iptv-player-no-subscription.html": "/windows-iptv-player/",
+  "windows-iptv-player.html": "/windows-iptv-player/",
+  "windows-iptv-terms.html": "/windows-iptv-player/",
+  "xtream-codes-epg-windows.html": "/xtream-codes-player-windows/",
+  "xtream-codes-player-windows.html": "/xtream-codes-player-windows/",
+  "xtream-codes-vs-m3u.html": "/m3u-player-windows/",
+  "yandex_bc47c9641353f551.html": "/windows-iptv-player/"
+};
+
 function targetFor(name) {
-  const lower = name.toLowerCase();
-  if (lower.includes("download") || lower.includes("free-iptv") || lower.includes("microsoft-store")) return "/download.html";
-  if (lower.includes("m3u")) return "/m3u-player-windows/";
-  if (lower.includes("xtream")) return "/xtream-codes-player-windows/";
-  if (lower.includes("stalker")) return "/stalker-portal-player-windows/";
-  if (lower.includes("stb-mac") || lower.includes("stb_mac")) return "/stb-mac-player-windows/";
-  if (lower.includes("epg") || lower.includes("tv-guide")) return "/epg-iptv-player-windows/";
-  if (lower.includes("windows-11")) return "/iptv-player-windows-11/";
-  if (lower.includes("best-iptv")) return "/best-iptv-player-for-windows/";
-  if (lower.includes("feature") || lower.includes("large-playlist") || lower.includes("theme") || lower.includes("external-player")) return "/features.html";
-  if (lower.includes("faq")) return "/faq.html";
-  if (lower.includes("legal")) return "/legal-disclaimer.html";
-  if (lower.includes("guide")) return "/guides.html";
-  return "/windows-iptv-player/";
+  return redirects[name];
 }
 
 function redirectPage(targetPath) {
@@ -127,7 +164,7 @@ function redirectPage(targetPath) {
 `;
 }
 
-function sanitizeJsonLd(html, canonical, description, addSoftware) {
+function sanitizeJsonLd(html, canonical, description, addSoftware, modified) {
   const visible = textContent(html).toLowerCase();
   const kept = [];
 
@@ -174,17 +211,20 @@ function sanitizeJsonLd(html, canonical, description, addSoftware) {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
       name: "BLAZIN IPTV Player",
-      url: canonical,
+      url: `${site}/`,
+      mainEntityOfPage: canonical,
       downloadUrl: store,
       operatingSystem: "Windows 10, Windows 11",
       applicationCategory: "MultimediaApplication",
       softwareVersion: "1.1.21.0",
-      dateModified: today,
+      ...(modified ? { dateModified: modified } : {}),
+      "@id": `${site}/#software`,
       image: `${site}/assets/app-icon.png`,
       description,
       publisher: {
         "@type": "Organization",
-        name: "WindowsIPTV.com",
+        "@id": `${site}/#organization`,
+        name: "BLAZIN IPTV Player",
         url: site,
         logo: `${site}/assets/app-icon.png`
       }
@@ -195,7 +235,8 @@ function sanitizeJsonLd(html, canonical, description, addSoftware) {
   return html.replace(/<\/head>/i, `${scripts}</head>`);
 }
 
-const { path: sitemapPath, xml: sitemapXml, urls: sitemapUrls } = readSitemap();
+const { xml: sitemapXml, urls: sitemapUrls } = readSitemap();
+const modifiedForUrl = new Map([...sitemapXml.matchAll(/<url>\s*<loc>([^<]+)<\/loc>([\s\S]*?)<\/url>/g)].map((match) => [match[1], match[2].match(/<lastmod>([^<]+)<\/lastmod>/)?.[1]]));
 const preferred = new Set(sitemapUrls.map((url) => fileForPath(new URL(url).pathname)));
 const locForFile = new Map(sitemapUrls.map((url) => [fileForPath(new URL(url).pathname), url]));
 const softwareFiles = new Set([
@@ -203,7 +244,6 @@ const softwareFiles = new Set([
   "download.html",
   "features.html",
   "windows-iptv-player/index.html",
-  "best-iptv-player-for-windows/index.html",
   "iptv-player-windows-11/index.html",
   "m3u-player-windows/index.html",
   "xtream-codes-player-windows/index.html",
@@ -212,7 +252,7 @@ const softwareFiles = new Set([
   "epg-iptv-player-windows/index.html"
 ]);
 
-const footer = `<div class="footer-links"><a href="/">Home</a><a href="/download.html">7-Day Trial</a><a href="/features.html">Features</a><a href="/guides.html">Guides</a><a href="/screenshots.html">Screenshots</a><a href="/user-guide.html">User Guide</a><a href="/faq.html">FAQ</a><a href="/legal-disclaimer.html">Legal Disclaimer</a><a href="/windows-iptv-player/">Windows IPTV Player</a><a href="/m3u-player-windows/">M3U</a><a href="/xtream-codes-player-windows/">Xtream Codes</a><a href="/stb-mac-player-windows/">STB MAC</a><a href="/stalker-portal-player-windows/">Stalker Portal</a><a href="/epg-iptv-player-windows/">EPG</a></div>`;
+const footer = `<div class="footer-links"><a href="/">Home</a><a href="/download.html">7-Day Trial</a><a href="/features.html">Features</a><a href="/guides.html">Guides</a><a href="/screenshots.html">Screenshots</a><a href="/user-guide.html">User Guide</a><a href="/faq.html">FAQ</a><a href="/legal-disclaimer.html">Legal Disclaimer</a><a href="/windows-iptv-player/">Windows IPTV Player</a><a href="/best-iptv-player-for-windows/">Compare Players</a><a href="/iptv-player-windows-11/">Windows 11 Setup</a><a href="/m3u-player-windows/">M3U</a><a href="/xtream-codes-player-windows/">Xtream Codes</a><a href="/stb-mac-player-windows/">STB MAC</a><a href="/stalker-portal-player-windows/">Stalker Portal</a><a href="/epg-iptv-player-windows/">EPG</a></div>`;
 
 let changed = 0;
 let consolidated = 0;
@@ -239,7 +279,14 @@ for (const file of walk(docs).filter((item) => item.toLowerCase().endsWith(".htm
   }
 
   if (!preferred.has(name)) {
-    const next = redirectPage(targetFor(name));
+    const target = targetFor(name);
+    if (!target) {
+      console.warn(`Unlisted page preserved: ${name}. Review its sitemap entry before publishing.`);
+      skipped += 1;
+      continue;
+    }
+    if (!sitemapUrls.includes(`${site}${target}`)) throw new Error(`Redirect destination is not a preferred URL: ${name} -> ${target}`);
+    const next = redirectPage(target);
     if (next !== html) {
       writeFileSync(file, next, "utf8");
       changed += 1;
@@ -276,15 +323,17 @@ for (const file of walk(docs).filter((item) => item.toLowerCase().endsWith(".htm
       return full;
     }
     if (parsed.origin !== site) return full;
+    if (parsed.pathname === "/index.html") return `href=${quote}/${parsed.hash}${quote}`;
     const targetFile = fileForPath(parsed.pathname);
     if (preferred.has(targetFile) || targetFile.startsWith("assets/") || targetFile.startsWith("screenshots/")) return full;
     if (!existsSync(join(docs, targetFile))) return full;
     const targetPath = targetFor(targetFile);
+    if (!targetPath) return full;
     return `href=${quote}${targetPath}${quote}`;
   });
 
   const description = getMeta(next, "description") || "BLAZIN IPTV Player information for Windows users with legal user-provided playlists and portal sources.";
-  next = sanitizeJsonLd(next, canonical, description, softwareFiles.has(name));
+  next = sanitizeJsonLd(next, canonical, description, softwareFiles.has(name), modifiedForUrl.get(canonical));
 
   if (next !== html) {
     writeFileSync(file, next, "utf8");
@@ -293,10 +342,6 @@ for (const file of walk(docs).filter((item) => item.toLowerCase().endsWith(".htm
   reviewed += 1;
 }
 
-const updatedSitemap = sitemapXml.replace(/<lastmod>[^<]*<\/lastmod>/g, `<lastmod>${today}</lastmod>`);
-if (updatedSitemap !== sitemapXml) {
-  writeFileSync(sitemapPath, updatedSitemap, "utf8");
-  changed += 1;
-}
+// Preserve editorial lastmod dates; maintenance alone is not a substantive update.
 
 console.log(`Bing quality cleanup complete: ${reviewed} preferred pages reviewed, ${consolidated} non-preferred pages consolidated, ${changed} files changed, ${skipped} verification files skipped.`);

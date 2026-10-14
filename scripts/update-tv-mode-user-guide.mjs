@@ -63,6 +63,8 @@ let html = readFileSync(guidePath, "utf8");
 
 const existingPattern = new RegExp(`${startMarker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[\\s\\S]*?${endMarker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i");
 html = html.replace(existingPattern, "");
+// Remove the insertion newline as well so maintenance does not grow the page.
+html = html.replace(/\s*(?=<section class="section"><div class="container"><p class="kicker">Source setup shortcuts<\/p>)/, "");
 
 const relatedMarker = '<section class="section"><div class="container"><p class="kicker">Source setup shortcuts</p>';
 if (!html.includes(relatedMarker)) {

@@ -88,11 +88,12 @@ for (const file of walk(docs).filter((item) => item.toLowerCase().endsWith(".htm
 
   if (sitemapFiles.has(name)) {
     if (noindex) errors.push(`${name}: sitemap page must be indexable`);
-    if (!sitemapUrlSet.has(canonical)) errors.push(`${name}: canonical is not one of the preferred sitemap URLs (${canonical})`);
+    const expectedCanonical = sitemapUrls.find((url) => fileForPath(new URL(url).pathname) === name);
+    if (canonical !== expectedCanonical) errors.push(`${name}: canonical must match its sitemap URL (${expectedCanonical})`);
     if ((html.match(/<h1\b/gi) ?? []).length !== 1) errors.push(`${name}: expected exactly one H1`);
     indexablePages.push({ name, html, text, canonical, shingles: shingles(text) });
   } else {
-    if (!noindex) errors.push(`${name}: non-sitemap page must be noindex`);
+    if (!noindex) errors.push(`${name}: indexable page is missing from the sitemap; review explicitly rather than replacing its content`);
     if (canonical && !sitemapUrlSet.has(canonical)) errors.push(`${name}: consolidated page canonical must point to a preferred sitemap URL`);
     if (!/<meta\b[^>]*http-equiv\s*=\s*(["'])refresh\1/i.test(html)) errors.push(`${name}: consolidated page is missing a redirect`);
   }
@@ -145,10 +146,21 @@ for (const file of walk(docs).filter((item) => item.toLowerCase().endsWith(".htm
     const ref = match[2];
     if (/^(?:https?:|mailto:|tel:|#|data:)/i.test(ref)) continue;
     const clean = ref.split("#")[0].split("?")[0];
-    if (!clean || clean.startsWith("/")) continue;
-    const target = resolve(dirname(file), clean);
+    if (!clean) continue;
+    const target = clean.startsWith("/") ? resolve(docs, clean.slice(1)) : resolve(dirname(file), clean);
     const candidate = clean.endsWith("/") ? join(target, "index.html") : target;
     if (!existsSync(candidate)) errors.push(`${name}: broken local reference ${ref}`);
+  }
+}
+
+const titles = new Map();
+const headings = new Map();
+for (const page of indexablePages) {
+  for (const [tag, seen] of [["title", titles], ["h1", headings]]) {
+    const value = visibleText(page.html.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i"))?.[1] ?? "").toLowerCase();
+    if (!value) errors.push(`${page.name}: missing ${tag}`);
+    else if (seen.has(value)) errors.push(`${page.name}: duplicate ${tag} also used by ${seen.get(value)}`);
+    else seen.set(value, page.name);
   }
 }
 
