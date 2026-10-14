@@ -176,8 +176,17 @@ Users are responsible for using their own legal IPTV playlist, account, portal, 
 
 ---
 
-## Website SEO Pages
+## Windows IPTV Guides
 
-The GitHub Pages website includes focused pages for Windows IPTV player searches, including M3U Player for Windows, M3U Plus Player, Xtream Codes Player, STB MAC Player, Stalker Portal Player, IPTV Player with EPG, IPTV Smarters Alternative, VLC IPTV Player, and Best IPTV Player for Windows 11.
+The official BLAZIN website includes focused guides for the main Windows IPTV searches and supported source types:
+
+* [IPTV Player for Windows 11 & 10](https://windowsiptv.com/windows-iptv-player/)
+* [Best IPTV Player for Windows](https://windowsiptv.com/best-iptv-player-for-windows/)
+* [IPTV Player for Windows 11](https://windowsiptv.com/iptv-player-windows-11/)
+* [M3U Player for Windows](https://windowsiptv.com/m3u-player-windows/)
+* [Xtream Codes Player for Windows](https://windowsiptv.com/xtream-codes-player-windows/)
+* [STB MAC Player for Windows](https://windowsiptv.com/stb-mac-player-windows/)
+* [Stalker Portal Player for Windows](https://windowsiptv.com/stalker-portal-player-windows/)
+* [IPTV Player with EPG for Windows](https://windowsiptv.com/epg-iptv-player-windows/)
 
 Official website: https://windowsiptv.com/
